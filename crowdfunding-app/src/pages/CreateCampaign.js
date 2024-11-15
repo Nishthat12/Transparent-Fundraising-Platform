@@ -1,8 +1,11 @@
 import React, { useState } from "react";
 import Web3 from "web3";
+import { useNavigate } from "react-router-dom";
 import { contractABI, contractAddress } from "../config";
+import "./CreateCampaign.css"; // For additional custom styles
 
 const CreateCampaign = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -73,56 +76,70 @@ const CreateCampaign = () => {
   };
 
   return (
-    <div>
-      <h1>Create Campaign</h1>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      {success && <p style={{ color: "green" }}>{success}</p>}
-      <form onSubmit={handleSubmit}>
-        <div>
-          <label>Title:</label>
+    <div className="create-campaign-container container">
+      <div className="mb-4">
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate("/home")} // Navigates back to homepage
+        >
+          ← Back to Homepage
+        </button>
+      </div>
+      <h1 className="text-center my-4">Create a New Campaign</h1>
+      {error && <div className="alert alert-danger text-center">{error}</div>}
+      {success && (
+        <div className="alert alert-success text-center">{success}</div>
+      )}
+      <form onSubmit={handleSubmit} className="p-4 shadow rounded bg-light">
+        <div className="mb-3">
+          <label className="form-label">Title:</label>
           <input
             type="text"
             name="title"
             value={formData.title}
             onChange={handleInputChange}
-            placeholder="Enter campaign title"
+            placeholder="E.g., Save the Forests"
+            className="form-control"
             required
           />
         </div>
-        <div>
-          <label>Description:</label>
+        <div className="mb-3">
+          <label className="form-label">Description:</label>
           <textarea
             name="description"
             value={formData.description}
             onChange={handleInputChange}
-            placeholder="Enter campaign description"
+            placeholder="Provide details about your campaign..."
+            className="form-control"
+            rows="4"
             required
           />
         </div>
-        <div>
-          <label>Goal (ETH):</label>
+        <div className="mb-3">
+          <label className="form-label">Goal (ETH):</label>
           <input
             type="number"
             name="goal"
             value={formData.goal}
             onChange={handleInputChange}
-            placeholder="Enter funding goal in ETH"
+            placeholder="E.g., 10 ETH"
+            className="form-control"
             required
           />
         </div>
-        <div>
-          <label>Duration (Hours):</label>
+        <div className="mb-3">
+          <label className="form-label">Duration (Hours):</label>
           <input
             type="number"
             name="duration"
             value={formData.duration}
             onChange={handleInputChange}
-            placeholder="Enter campaign duration in hours"
+            placeholder="E.g., 72 (3 days)"
+            className="form-control"
             required
           />
         </div>
-        <div>
-          <label>Private Campaign:</label>
+        <div className="form-check mb-3">
           <input
             type="checkbox"
             name="isPrivate"
@@ -130,10 +147,22 @@ const CreateCampaign = () => {
             onChange={(e) =>
               setFormData({ ...formData, isPrivate: e.target.checked })
             }
+            className="form-check-input"
           />
+          <label className="form-check-label">Private Campaign</label>
         </div>
-        <button type="submit" disabled={loading}>
-          {loading ? "Creating..." : "Create Campaign"}
+        <button
+          type="submit"
+          className="btn btn-primary w-100"
+          disabled={loading}
+        >
+          {loading ? (
+            <div className="spinner-border spinner-border-sm" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
+          ) : (
+            "Create Campaign"
+          )}
         </button>
       </form>
     </div>

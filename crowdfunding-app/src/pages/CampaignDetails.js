@@ -1,10 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Web3 from "web3";
-import bigInt from "big-integer"; // Importing BigInt
+import bigInt from "big-integer";
 import { contractABI, contractAddress } from "../config";
+import {
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  TextField,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from "@mui/material";
 
 const CampaignDetails = () => {
+  const navigate = useNavigate();
   const { id: campaignId } = useParams();
   const [web3, setWeb3] = useState(null);
   const [account, setAccount] = useState("");
@@ -15,8 +29,9 @@ const CampaignDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [contract, setContract] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false); // For pop-up
+  const [dialogMessage, setDialogMessage] = useState(""); // Dialog message
 
-  // Initialize Web3 and contract
   useEffect(() => {
     const initWeb3 = async () => {
       if (window.ethereum) {
@@ -42,7 +57,6 @@ const CampaignDetails = () => {
     initWeb3();
   }, []);
 
-  // Fetch campaign details
   useEffect(() => {
     if (web3 && campaignId && contract) {
       const loadCampaignDetails = async () => {
@@ -74,10 +88,18 @@ const CampaignDetails = () => {
     }
   }, [web3, campaignId, contract, account]);
 
-  // Handle donation
+  const openDialog = (message) => {
+    setDialogMessage(message);
+    setDialogOpen(true);
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+  };
+
   const handleDonate = async () => {
     if (!donationAmount || donationAmount <= 0) {
-      alert("Please enter a valid donation amount.");
+      openDialog("Please enter a valid donation amount.");
       return;
     }
 
@@ -86,18 +108,17 @@ const CampaignDetails = () => {
         from: account,
         value: web3.utils.toWei(donationAmount, "ether"),
       });
-      alert("Donation successful!");
+      openDialog("Donation successful!");
       setDonationAmount("");
     } catch (err) {
       console.error("Error processing donation:", err);
-      setError("Error processing donation.");
+      openDialog("Error processing donation.");
     }
   };
 
-  // Handle spend funds
   const handleSpendFunds = async () => {
     if (!spendAmount || parseFloat(spendAmount) <= 0) {
-      alert("Please enter a valid amount to spend.");
+      openDialog("Please enter a valid amount to spend.");
       return;
     }
 
@@ -107,7 +128,7 @@ const CampaignDetails = () => {
     );
 
     if (spendAmountInWei.gt(raisedAmountInWei)) {
-      alert("You cannot spend more than the raised amount.");
+      openDialog("You cannot spend more than the raised amount.");
       return;
     }
 
@@ -117,38 +138,35 @@ const CampaignDetails = () => {
         .send({
           from: account,
         });
-      alert(`Successfully spent ${spendAmount} ETH!`);
+      openDialog(`Successfully spent ${spendAmount} ETH!`);
       setSpendAmount("");
     } catch (err) {
       console.error("Error processing spend funds transaction:", err);
-      setError("Error processing spend funds transaction.");
+      openDialog("Error processing spend funds transaction.");
     }
   };
 
-  // Calculate time left
   const getTimeLeft = (endTime) => {
     const endTimeBigInt = bigInt(endTime);
     const currentTime = bigInt(Math.floor(Date.now() / 1000));
-    const timeLeftInSeconds = endTimeBigInt.minus(currentTime).minus(259200);
+    const timeLeftInSeconds = endTimeBigInt.minus(currentTime);
 
     if (timeLeftInSeconds <= 0) {
       campaign.isEnded = 1;
       return "Campaign Ended";
     }
 
-    // Calculate days, hours, minutes, seconds
-    const secondsInDay = bigInt(24 * 60 * 60); // 1 day = 86400 seconds
-    const secondsInHour = bigInt(3600); // 1 hour = 3600 seconds
-    const secondsInMinute = bigInt(60); // 1 minute = 60 seconds
+    const secondsInDay = bigInt(24 * 60 * 60);
+    const secondsInHour = bigInt(3600);
+    const secondsInMinute = bigInt(60);
 
-    const days = timeLeftInSeconds.divide(secondsInDay); // Calculate days
-    const hours = timeLeftInSeconds.mod(secondsInDay).divide(secondsInHour); // Calculate hours
+    const days = timeLeftInSeconds.divide(secondsInDay);
+    const hours = timeLeftInSeconds.mod(secondsInDay).divide(secondsInHour);
     const minutes = timeLeftInSeconds
       .mod(secondsInHour)
-      .divide(secondsInMinute); // Calculate minutes
-    const seconds = timeLeftInSeconds.mod(secondsInMinute); // Remaining seconds
+      .divide(secondsInMinute);
+    const seconds = timeLeftInSeconds.mod(secondsInMinute);
 
-    // Build the time left string
     let timeLeftStr = "";
     if (!days.isZero()) timeLeftStr += `${days.toString()}d `;
     if (!hours.isZero() || !days.isZero())
@@ -169,41 +187,95 @@ const CampaignDetails = () => {
   }
 
   return (
-    <div>
-      <h1>{campaign.title}</h1>
-      <p>{campaign.description}</p>
-      <p>Goal: {campaign.goalAmount} ETH</p>
-      <p>Raised: {campaign.raisedAmount} ETH</p>
-      <p>
-        {campaign.isEnded
-          ? "Campaign has ended"
-          : `Time Left: ${getTimeLeft(campaign.endTime)}`}
-      </p>
+    <div style={{ maxWidth: 800, margin: "0 auto", padding: "20px" }}>
+      <div className="mb-4">
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate("/campaigns")} // Navigates back to homepage
+        >
+          ← Back
+        </button>
+      </div>
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h4" gutterBottom>
+            {campaign.title}
+          </Typography>
+          <Typography variant="body1" paragraph>
+            {campaign.description}
+          </Typography>
+          <Typography variant="h6" gutterBottom>
+            Goal: {campaign.goalAmount} ETH
+          </Typography>
+          <Typography variant="h6" gutterBottom>
+            Raised: {campaign.raisedAmount} ETH
+          </Typography>
+          <Typography variant="body1" color="textSecondary" paragraph>
+            {campaign.isEnded
+              ? "Campaign has ended"
+              : `Time Left: ${getTimeLeft(campaign.endTime)}`}
+          </Typography>
 
-      {!campaign.isEnded && (
-        <div>
-          <input
-            type="text"
-            placeholder="Enter donation amount (ETH)"
-            value={donationAmount}
-            onChange={(e) => setDonationAmount(e.target.value)}
-          />
-          <button onClick={handleDonate}>Donate</button>
-        </div>
-      )}
+          {!campaign.isEnded && (
+            <div style={{ marginBottom: "20px" }}>
+              <TextField
+                label="Donation Amount (ETH)"
+                variant="outlined"
+                fullWidth
+                type="number"
+                value={donationAmount}
+                onChange={(e) => setDonationAmount(e.target.value)}
+                style={{ marginBottom: "10px" }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleDonate}
+                fullWidth
+              >
+                Donate
+              </Button>
+            </div>
+          )}
 
-      {isOwner && (
-        <div>
-          <h2>Spend Funds</h2>
-          <input
-            type="text"
-            placeholder="Enter amount to spend (ETH)"
-            value={spendAmount}
-            onChange={(e) => setSpendAmount(e.target.value)}
-          />
-          <button onClick={handleSpendFunds}>Spend Funds</button>
-        </div>
-      )}
+          {isOwner && campaign.isEnded && (
+            <div>
+              <Typography variant="h6" gutterBottom>
+                Spend Funds
+              </Typography>
+              <TextField
+                label="Amount to Spend (ETH)"
+                variant="outlined"
+                fullWidth
+                value={spendAmount}
+                onChange={(e) => setSpendAmount(e.target.value)}
+                style={{ marginBottom: "10px" }}
+              />
+              <Button
+                variant="contained"
+                color="secondary"
+                onClick={handleSpendFunds}
+                fullWidth
+              >
+                Spend Funds
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Dialog for pop-up */}
+      <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Notice</DialogTitle>
+        <DialogContent>
+          <Typography>{dialogMessage}</Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

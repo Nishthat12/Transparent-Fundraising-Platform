@@ -1,0 +1,13 @@
+.create-campaign-container {
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.create-campaign-container h1 {
+    color: #333;
+}
+
+.form-control:focus {
+    box-shadow: none;
+    border-color: #007bff;
+}

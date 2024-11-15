@@ -2,6 +2,15 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { contract } from "../contract/TransparentCrowdFunding"; // Ensure this points to your contract instance
 import Web3 from "web3";
+import {
+  Card,
+  CardContent,
+  CardActions,
+  Typography,
+  Button,
+  Grid,
+  Container,
+} from "@mui/material";
 
 const MyCampaigns = () => {
   const [myCampaigns, setMyCampaigns] = useState([]);
@@ -60,25 +69,65 @@ const MyCampaigns = () => {
   }
 
   if (!myCampaigns.length) {
-    return <div>No campaigns found.</div>;
+    return (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        <Typography variant="h6">No campaigns found.</Typography>
+      </div>
+    );
   }
 
   return (
-    <div>
-      <h1>My Campaigns</h1>
-      <ul>
+    <Container style={{ marginTop: "20px" }}>
+      <div className="mb-4">
+        <button
+          className="btn btn-secondary"
+          onClick={() => navigate("/home")} // Navigates back to homepage
+        >
+          ← Back to Homepage
+        </button>
+      </div>
+      <Typography variant="h4" gutterBottom>
+        My Campaigns
+      </Typography>
+      <Grid container spacing={3}>
         {myCampaigns.map((campaign) => (
-          <li key={campaign.id}>
-            <h2>{campaign.title}</h2>
-            <p>Goal: {campaign.goalAmount} ETH</p>
-            <p>Raised: {campaign.raisedAmount} ETH</p>
-            <button onClick={() => navigate(`/campaign/${campaign.id}`)}>
-              View Details
-            </button>
-          </li>
+          <Grid item xs={12} sm={6} md={4} key={campaign.id}>
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="h5" component="div" gutterBottom>
+                  {campaign.title}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  {campaign.description}
+                </Typography>
+                <Typography variant="body1" color="textPrimary">
+                  <strong>Goal:</strong> {campaign.goalAmount} ETH
+                </Typography>
+                <Typography variant="body1" color="textPrimary" gutterBottom>
+                  <strong>Raised:</strong> {campaign.raisedAmount} ETH
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  <strong>Start Time:</strong> {campaign.startTime}
+                </Typography>
+                <Typography variant="body2" color="textSecondary" gutterBottom>
+                  <strong>End Time:</strong> {campaign.endTime}
+                </Typography>
+              </CardContent>
+              <CardActions>
+                <Button
+                  variant="contained"
+                  color="primary"
+                  onClick={() => navigate(`/campaign/${campaign.id}`)}
+                  fullWidth
+                >
+                  View Details
+                </Button>
+              </CardActions>
+            </Card>
+          </Grid>
         ))}
-      </ul>
-    </div>
+      </Grid>
+    </Container>
   );
 };
 
